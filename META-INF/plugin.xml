@@ -1,0 +1,47 @@
+<idea-plugin version="2">
+  <id>com.intellij.torquescript</id>
+  <name>TorqueScript</name>
+  <version>1.0</version>
+  <vendor email="lukaspj@outlook.com" url="http://torque3d.wikidot.com">Torque3D</vendor>
+
+  <description><![CDATA[
+      <b>Description tbd</b>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      <b>First release</b>
+    ]]>
+  </change-notes>
+
+  <!-- please see  for description -->
+  <idea-version since-build="131"/>
+
+  <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  -->
+  <depends>com.intellij.modules.lang</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+      <fileTypeFactory implementation="com.intellij.torquescript.TSFileTypeFactory"/>
+      <lang.parserDefinition language="TorqueScript" implementationClass="com.intellij.torquescript.TSParserDefinition"/>
+      <lang.syntaxHighlighterFactory key="TorqueScript" implementationClass="com.intellij.torquescript.TSSyntaxHighlighterFactory"/>
+
+    <!-- Settings pages -->
+      <colorSettingsPage implementation="com.intellij.torquescript.TSColorSettingsPage"/>
+  </extensions>
+
+  <application-components>
+    <!-- Add your application components here -->
+  </application-components>
+
+  <project-components>
+    <!-- Add your project components here -->
+  </project-components>
+
+  <actions>
+    <!-- Add your actions here -->
+  </actions>
+
+</idea-plugin>

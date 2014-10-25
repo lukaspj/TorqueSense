@@ -1,0 +1,138 @@
+{
+    parserClass="com.intellij.torquescript.parser.TSParser"
+
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+    extends(".*expr")=expr
+
+    psiClassPrefix="TS"
+    psiImplClassSuffix="Impl"
+    psiPackage="com.intellij.torquescript.psi"
+    psiImplPackage="com.intellij.torquescript.psi.impl"
+
+    elementTypeHolderClass="com.intellij.torquescript.psi.TSTypes"
+    elementTypeClass="com.intellij.torquescript.psi.TSElementType"
+    tokenTypeClass="com.intellij.torquescript.psi.TSTokenType"
+}
+
+start ::= decl*
+
+private decl ::= (stmt | fn_decl_stmt | package_decl)
+
+package_decl ::= PACKAGE ID LBRACE fn_decl_stmt+ RBRACE SEMICOLON
+
+fn_decl_stmt ::= FUNCTION ID (COLONCOLON ID)? LPAREN var_list RPAREN LBRACE stmt_list RBRACE
+
+private stmt_list ::= stmt*
+
+stmt ::= expr SEMICOLON
+        | for_stmt
+        | foreach_stmt
+        | foreachstr_stmt
+        | while_stmt
+        | switch_stmt
+        | switchstr_stmt
+        | if_stmt
+        | COMMENT
+        | datablock_decl_stmt
+        | singleton_decl_stmt
+
+datablock_decl_stmt ::= DATABLOCK ID LPAREN classname? RPAREN LBRACE assign_field* RBRACE SEMICOLON
+singleton_decl_stmt ::= SINGLETON ID LPAREN classname? RPAREN LBRACE assign_field* RBRACE SEMICOLON
+
+classname ::= ID
+
+expr ::= call_group
+        | variable_expr
+        | lvalue_list_expr
+        | assign_group
+        | add_group
+        | mul_group
+        | bit_group
+        | unary_group
+        | equality_group
+        | concat_group
+        | logical_group
+        | new_expr
+        | primary_group
+        |
+
+private assign_group ::= assign_expr | plusassign_expr | minusassign_expr | timesassign_expr | divideassign_expr
+private unary_group ::= unary_plus_expr | unary_min_expr | increment_expr | decrement_expr | negate_expr
+private mul_group ::= mul_expr | div_expr | mod_expr
+private add_group ::= plus_expr | minus_expr
+private bit_group ::= bitcompl_expr | bitand_expr | bitor_expr | bitxor_expr | bitlshift_expr | bitrshift_expr
+private equality_group ::= equal_expr | notequal_expr | strequal_expr | notstrequal_expr | gt_expr | ge_expr | lt_expr | le_expr
+private logical_group ::= logor_expr | logand_expr
+private call_group ::= method_call_expr | function_call_expr
+private concat_group ::= concat_expr | contab_expr | conspc_expr
+private primary_group ::= paren_expr | literal_expr | break_expr | return_expr
+
+assign_expr ::= lvalue_list_expr ASSIGN expr {rightAssociative = true}
+plusassign_expr ::= lvalue_list_expr PLUSASSIGN expr {rightAssociative = true}
+minusassign_expr ::= lvalue_list_expr MINUSASSIGN expr {rightAssociative = true}
+timesassign_expr ::= lvalue_list_expr TIMESASSIGN expr {rightAssociative = true}
+divideassign_expr ::= lvalue_list_expr DIVIDEASSIGN expr {rightAssociative = true}
+unary_min_expr ::= MINUS expr
+unary_plus_expr ::= PLUS expr
+increment_expr ::= lvalue_expr PLUSPLUS
+decrement_expr ::= lvalue_expr MINUSMINUS
+negate_expr ::= EXCLAMATION expr
+mul_expr ::= expr TIMES expr
+div_expr ::= expr DIVIDE expr
+mod_expr ::= expr MODULO expr
+plus_expr ::= expr PLUS expr
+minus_expr ::= expr MINUS expr
+bitcompl_expr ::= expr BITCOMPL expr
+bitand_expr ::= expr BITAND expr
+bitor_expr ::= expr BITOR expr
+bitxor_expr ::= expr BITXOR expr
+bitlshift_expr ::= expr BITLSHIFT expr
+bitrshift_expr ::= expr BITRSHIFT expr
+equal_expr ::= expr EQUAL expr
+strequal_expr ::= expr STREQUAL expr
+notequal_expr ::= expr NOTEQUAL expr
+notstrequal_expr ::= expr NOTSTREQUAL expr
+gt_expr ::= expr GT expr
+ge_expr ::= expr GE expr
+lt_expr ::= expr LT expr
+le_expr ::= expr LE expr
+logor_expr ::= expr LOGOR expr
+logand_expr ::= expr LOGAND expr
+concat_expr ::= expr CONCAT expr
+contab_expr ::= expr CONTAB expr
+conspc_expr ::= expr CONSPC expr
+paren_expr ::= LPAREN expr RPAREN
+break_expr ::= BREAK
+return_expr ::= RETURN expr | RETURN
+new_expr ::= NEW ID LPAREN ID? RPAREN LBRACE assign_field* RBRACE
+assign_field ::= (ID | reserved_keyword_expr) ASSIGN expr SEMICOLON {rightAssociative = true}
+reserved_keyword_expr ::= FUNCTION | DATABLOCK | SINGLETON | NEW | PACKAGE | FOR | FOREACH | WHILE | SWITCH | CASE | DEFAULT | BREAK | RETURN | IN | IF | ELSE
+
+function_call_expr ::= lvalue_list_expr LPAREN (expr arg*)? RPAREN
+arg ::= COMMA expr
+method_call_expr ::= ID COLONCOLON function_call_expr
+lvalue_list_expr ::= variable_expr lvalue_expr*
+lvalue_expr ::= accessor ID | LBRACK expr RBRACK
+private accessor ::= DOT | INTERNALNAMERECUR | INTERNALNAME
+variable_expr ::= LOCALVAR | GLOBALVAR | ID
+literal_expr ::= numberliteral_expr | stringliteral_expr
+
+numberliteral_expr ::= INTEGER | FLOAT
+
+stringliteral_expr ::= STRING | TAG
+
+var_list ::= (LOCALVAR (COMMA LOCALVAR)*)?
+
+while_stmt ::= WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
+for_stmt ::= FOR LPAREN expr SEMICOLON expr SEMICOLON expr RPAREN LBRACE stmt_list RBRACE
+
+foreach_stmt ::= FOREACH LPAREN LOCALVAR IN expr RPAREN LBRACE stmt_list RBRACE
+foreachstr_stmt ::= FOREACHSTR LPAREN LOCALVAR IN expr RPAREN LBRACE stmt_list RBRACE
+
+switch_stmt ::= SWITCH LPAREN expr RPAREN LBRACE caseint_list RBRACE
+switchstr_stmt ::= SWITCHSTR LPAREN expr RPAREN LBRACE casestr_list RBRACE
+
+caseint_list ::= (CASE numberliteral_expr COLON stmt_list)+ (DEFAULT COLON)?
+casestr_list ::= (CASE STRING COLON stmt_list)+ (DEFAULT COLON)?
+
+if_stmt ::= IF LPAREN expr RPAREN (LBRACE stmt_list RBRACE | stmt) (ELSE (LBRACE stmt_list RBRACE | stmt))?
