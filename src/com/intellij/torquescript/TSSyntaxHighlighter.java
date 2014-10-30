@@ -53,7 +53,7 @@ public class TSSyntaxHighlighter extends SyntaxHighlighterBase {
             return GLOBALVARIABLE_KEYS;
         } else if (iElementType.equals(TSTypes.COMMENT)) {
             return COMMENT_KEYS;
-        } else if (iElementType.equals(TSTypes.FUNCTION) || iElementType.equals(TSTypes.TAG)) {
+        } else if (iElementType.equals(TSTypes.FUNCTION) || iElementType.equals(TSTypes.TAG) || iElementType.equals(TSTypes.PACKAGE)) {
             return FUNCTION_KEYS;
         } else if (iElementType.equals(TSTypes.ID)) {
             return ID_KEYS;
