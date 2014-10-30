@@ -28,6 +28,7 @@
       <lang.syntaxHighlighterFactory key="TorqueScript" implementationClass="com.intellij.torquescript.TSSyntaxHighlighterFactory"/>
 
       <psi.referenceContributor implementation="com.intellij.torquescript.TSReferenceContributor"/>
+      <completion.contributor language="TorqueScript" implementationClass="com.intellij.torquescript.TSCompletionContributor"/>
 
     <!-- Settings pages -->
       <colorSettingsPage implementation="com.intellij.torquescript.TSColorSettingsPage"/>
