@@ -103,20 +103,21 @@ expr ::= assert_group
        | primary_group
 
 // Primary expressions -- Begin
-private primary_group ::= inlineif_expr | inlineelse_expr
+private primary_group ::= inlineif_expr | inlineelse_expr | paren_expr
 
 inlineif_expr ::= expr QUESTION expr
 inlineelse_expr ::= inlineif_expr COLON expr
+paren_expr ::= LPAREN expr RPAREN
 // Primary expressions -- End
 
 // Object declarations -- Begin
 
 private obj_group ::= obj_1_expr | obj_2_expr | obj_3_expr | obj_4_expr | obj_5_expr
 
-obj_1_expr ::= NEW class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
+obj_1_expr ::= NEW class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr? RBRACE
 obj_2_expr ::= NEW class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN
-obj_3_expr ::= NEW class_name_expr LPAREN LBRACK object_name_expr RBRACK parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
-obj_4_expr ::= SINGLETON class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
+obj_3_expr ::= NEW class_name_expr LPAREN LBRACK object_name_expr RBRACK parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr? RBRACE
+obj_4_expr ::= SINGLETON class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr? RBRACE
 obj_5_expr ::= SINGLETON class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN
 
 parent_block_expr ::= (COLON ID)?
@@ -128,10 +129,8 @@ object_args_expr ::= (COMMA expr)?
 object_declare_block_expr ::= slot_assign_list_expr
                       | object_decl_list_expr
                       | slot_assign_list_expr object_decl_list_expr
-                      |
 
-object_decl_list_expr ::= obj_group SEMICOLON
-                   | obj_group object_decl_list_expr
+object_decl_list_expr ::= obj_group (SEMICOLON obj_group)*
 
 slot_assign_list_expr ::= slot_assign+
 
