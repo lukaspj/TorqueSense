@@ -3,7 +3,7 @@
 
     extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
     extends(".*expr")=expr
-    extends(".*slot")=slot_acc
+    //extends(".*slot")=slot_acc
     extends(".*expstm")=expr//stmt_expr_
 
     psiClassPrefix="TS"
@@ -14,6 +14,8 @@
     elementTypeHolderClass="com.intellij.torquescript.psi.TSTypes"
     elementTypeClass="com.intellij.torquescript.psi.TSElementType"
     tokenTypeClass="com.intellij.torquescript.psi.TSTokenType"
+
+    psiImplUtilClass="com.intellij.torquescript.psi.impl.SimplePsiImplUtil"
 }
 
 start ::= decl_list
@@ -47,36 +49,38 @@ stmt ::= if_stmt
        | DOCBLOCK
        | COMMENT
 
-fn_decl_stmt ::= FUNCTION ID LPAREN var_list_decl RPAREN LBRACE statement_list RBRACE
-               | FUNCTION ID COLONCOLON ID LPAREN var_list_decl RPAREN LBRACE statement_list RBRACE
+fn_decl_stmt ::= FUNCTION ID LPAREN var_list_decl RPAREN LBRACE stmt* RBRACE
+               | FUNCTION ID COLONCOLON ID LPAREN var_list_decl RPAREN LBRACE stmt* RBRACE
+               {mixin="com.intellij.torquescript.psi.impl.SimpleNamedElementImpl"
+               implements="com.intellij.torquescript.psi.SimpleNamedElement" methods=[getKey getName setName getNameIdentifier]}
 
-var_list_decl ::= var_list?
+private var_list_decl ::= var_list?
 
-var_list ::= VAR
-           | VAR COMMA var_list
+var_list ::= VAR COMMA var_list
+           | VAR
 
 datablock_decl ::= DATABLOCK class_name_expr LPAREN expr parent_block RPAREN LBRACE slot_assign_list_opt RBRACE SEMICOLON
 
-object_decl ::= NEW class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE object_declare_block RBRACE
+/*object_decl ::= NEW class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE object_declare_block RBRACE
               | NEW class_name_expr LPAREN object_name parent_block object_args RPAREN
               | NEW class_name_expr LPAREN LBRACK object_name RBRACK parent_block object_args RPAREN LBRACE object_declare_block RBRACE
               | SINGLETON class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE object_declare_block RBRACE
               | SINGLETON class_name_expr LPAREN object_name parent_block object_args RPAREN
-
+*/
 parent_block ::= (COLON ID)?
 
 object_name ::= expr?
 
 object_args ::= (COMMA expr_list)?
 
-object_declare_block ::= slot_assign_list
+/*object_declare_block ::= slot_assign_list
                       | object_decl_list
                       | slot_assign_list object_decl_list
                       |
 
 object_decl_list ::= object_decl SEMICOLON
                    | object_decl object_decl_list
-
+*/
 stmt_block ::= LBRACE statement_list RBRACE
                | stmt
 
@@ -90,8 +94,8 @@ case_block ::= CASE case_expr COLON statement_list
 case_expr ::= expr
             | expr CASEOR case_expr
 
-if_stmt ::= IF LPAREN expr RPAREN stmt_block
-          | IF LPAREN expr RPAREN stmt_block ELSE stmt_block
+if_stmt ::= IF LPAREN expr RPAREN stmt_block ELSE stmt_block
+          | IF LPAREN expr RPAREN stmt_block
 
 while_stmt ::= WHILE LPAREN expr RPAREN stmt_block
              | DO stmt_block WHILE LPAREN expr RPAREN
@@ -116,13 +120,13 @@ expr ::= /*stmt_expr
        | binop_group
        //| TTAG
        // Test
+       | var_group
        | funcall_group
        | assert_group
        | obj_group
-       | var_group
-       | slot_group
        | ref_group
        | primary_group
+       //| slot_group
 
 private binop_group ::= gt_expr
                       | ge_expr
@@ -146,14 +150,14 @@ private binop_group ::= gt_expr
                       | times_expr
                       | divide_expr
 
-private unary_group ::= unary_compl_expr | unary_minus_expr | unary_neg_expr | unary_times_expr
-private primary_group ::= tag_expr | float_expr | int_expr | break_expr | id_expr | str_expr | var_expr | var_idx_expr | inlineif_expr | paren_expr
+private unary_group ::= unary_compl_expr | unary_minus_expr | unary_neg_expr | unary_times_expr | unary_increment_expr | unary_decrement_expr
 private ref_group ::= slotid_expr | slotbrack_expr | intslot_expr | intslotrec_expr
+private primary_group ::= tag_expr | float_expr | int_expr | break_expr | id_expr | str_expr | var_expr | var_idx_expr | inlineif_expr | paren_expr
 
-slotid_expr ::= expr DOT ID {elementType=slot_acc}
-slotbrack_expr ::= expr DOT ID LBRACK aidx_expr RBRACK {elementType=slot_acc}
+slotid_expr ::= expr DOT ID {elementType=slot_acc_expr}
+slotbrack_expr ::= expr (LBRACK aidx_expr RBRACK) {elementType=slot_acc_expr}
 
-slot_acc ::=
+slot_acc_expr ::=
 
 intslot_expr ::= expr INTERNALNAME class_name_expr
 intslotrec_expr ::= expr INTERNALNAMERECUR class_name_expr
@@ -174,6 +178,8 @@ unary_minus_expr ::= MINUS expr
 unary_times_expr ::= TIMES expr
 unary_neg_expr ::= EXCLAMATION expr
 unary_compl_expr ::= BITCOMPL expr
+unary_increment_expr ::= PLUSPLUS expr
+unary_decrement_expr ::= MINUSMINUS expr
 
 gt_expr ::= expr GT expr
 ge_expr ::= expr GE expr
@@ -200,19 +206,7 @@ divide_expr ::= expr DIVIDE expr
 class_name_expr ::= ID
                   | LPAREN expr RPAREN
 
-assign_op_struct ::= PLUSPLUS
-                   | MINUSMINUS
-                   | PLUSASSIGN expr
-                   | MINUSASSIGN expr
-                   | TIMESASSIGN expr
-                   | DIVIDEASSIGN expr
-                   | MODULOASSIGN expr
-                   | ANDASSIGN expr
-                   | XORASSIGN expr
-                   | ORASSIGN expr
-                   | SHIFTLASSIGN expr
-                   | SHIFTRASSIGN expr
-
+/*
 stmt_expr ::= stmt_expr_
 // Function calls
 // asserts
@@ -221,9 +215,9 @@ stmt_expr ::= stmt_expr_
 stmt_expr_ ::= funcall_group
             | assert_group
             | obj_group
-            | var_group
             | slot_group
-            /*funcall_expr //TODO: Implement funcalls
+            | var_group
+            *funcall_expr //TODO: Implement funcalls
             | assert_expr
             | object_decl
             | VAR ASSIGN expr
@@ -232,45 +226,61 @@ stmt_expr_ ::= funcall_group
             | VAR assign_op_struct
             | slot_acc assign_op_struct
             | slot_acc ASSIGN expr
-            | slot_acc ASSIGN LBRACE expr_list RBRACE*/
+            | slot_acc ASSIGN LBRACE expr_list RBRACE*
+*/
 
 private funcall_group ::= funcall_1_expstm | funcall_2_expstm | funcall_3_expstm
 private assert_group ::= assert_1_expstm | assert_2_expstm
 private obj_group ::= obj_1_expstm | obj_2_expstm | obj_3_expstm | obj_4_expstm | obj_5_expstm
-private var_group ::= var_1_expstm | var_2_expstm | var_3_expstm | var_4_expstm
-private slot_group ::= slot_acc_1_expstm | slot_acc_2_expstm | slot_acc_3_expstm
-
+private var_group ::= var_1_expstm | var_2_expstm | slot_acc_1_expstm | slot_acc_2_expstm
 
 funcall_1_expstm ::= expr DOT ID LPAREN expr_list_decl RPAREN
 funcall_2_expstm ::= ID LPAREN expr_list_decl RPAREN
 funcall_3_expstm ::= ID COLONCOLON ID LPAREN expr_list_decl RPAREN
+//funcall_4_expstm ::= var_1_expstm DOT ID LPAREN expr_list_decl RPAREN
 
 func_call_objs ::= VAR | ID | ID LPAREN expr_list_decl RPAREN
 
-assert_1_expstm ::= ASSERT LPAREN expr RPAREN
-assert_2_expstm ::= ASSERT LPAREN expr COMMA STRING RPAREN
+assert_1_expstm ::= assert_atom LPAREN expr RPAREN
+assert_2_expstm ::= assert_atom LPAREN expr COMMA STRING RPAREN
 
-obj_1_expstm ::= NEW class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE object_declare_block RBRACE
+assert_atom ::= ASSERT
+
+obj_1_expstm ::= NEW class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE obj_group RBRACE
 obj_2_expstm ::= NEW class_name_expr LPAREN object_name parent_block object_args RPAREN
-obj_3_expstm ::= NEW class_name_expr LPAREN LBRACK object_name RBRACK parent_block object_args RPAREN LBRACE object_declare_block RBRACE
-obj_4_expstm ::= SINGLETON class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE object_declare_block RBRACE
+obj_3_expstm ::= NEW class_name_expr LPAREN LBRACK object_name RBRACK parent_block object_args RPAREN LBRACE obj_group RBRACE
+obj_4_expstm ::= SINGLETON class_name_expr LPAREN object_name parent_block object_args RPAREN LBRACE obj_group RBRACE
 obj_5_expstm ::= SINGLETON class_name_expr LPAREN object_name parent_block object_args RPAREN
 
-var_1_expstm ::= VAR ASSIGN expr
-var_2_expstm ::= VAR LBRACK aidx_expr RBRACK ASSIGN expr
-var_3_expstm ::= VAR LBRACK aidx_expr RBRACK assign_op_struct
-var_4_expstm ::= VAR assign_op_struct
 
+assign_op_atom ::= ASSIGN
+                 | PLUSASSIGN
+                 | MINUSASSIGN
+                 | TIMESASSIGN
+                 | DIVIDEASSIGN
+                 | MODULOASSIGN
+                 | ANDASSIGN
+                 | XORASSIGN
+                 | ORASSIGN
+                 | SHIFTLASSIGN
+                 | SHIFTRASSIGN
+
+var_1_expstm ::= var_expr assign_op_atom expr
+var_2_expstm ::= var_expr LBRACK aidx_expr RBRACK
+
+slot_acc_1_expstm ::= slot_acc_expr assign_op_atom expr
+slot_acc_2_expstm ::= slot_acc_expr LBRACK aidx_expr RBRACK
+
+/*
 slot_acc_1_expstm ::= slot_acc assign_op_struct
 slot_acc_2_expstm ::= slot_acc ASSIGN expr
 slot_acc_3_expstm ::= slot_acc ASSIGN LBRACE expr_list RBRACE
+*/
+private expr_list_decl ::= expr_list?
 
-expr_list_decl ::= expr_list?
+expr_list ::= expr (COMMA expr)*
 
-expr_list ::= expr
-            | expr COMMA expr_list
-
-slot_assign_list_opt ::= slot_assign_list?
+private slot_assign_list_opt ::= slot_assign_list?
 
 slot_assign_list ::= slot_assign+
 

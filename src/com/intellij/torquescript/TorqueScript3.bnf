@@ -1,0 +1,286 @@
+{
+    parserClass="com.intellij.torquescript.parser.TSParser"
+
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+    extends(".*expr")=expr
+
+    psiClassPrefix="TS"
+    psiImplClassSuffix="Impl"
+    psiPackage="com.intellij.torquescript.psi"
+    psiImplPackage="com.intellij.torquescript.psi.impl"
+
+    elementTypeHolderClass="com.intellij.torquescript.psi.TSTypes"
+    elementTypeClass="com.intellij.torquescript.psi.TSElementType"
+    tokenTypeClass="com.intellij.torquescript.psi.TSTokenType"
+
+    psiImplUtilClass="com.intellij.torquescript.psi.impl.SimplePsiImplUtil"
+}
+// Root structure ------------------------------------------------------------------------------------------------------
+start ::= decl+
+
+decl ::= stmt
+       | fn_decl_stmt
+       | package_decl_stmt
+
+// Package specific
+package_decl_stmt ::= PACKAGE ID LBRACE fn_decl_stmt+ RBRACE SEMICOLON
+
+// Function specific
+fn_decl_stmt ::= FUNCTION ID LPAREN var_list? RPAREN LBRACE stmt* RBRACE
+               | FUNCTION ID COLONCOLON ID LPAREN var_list? RPAREN LBRACE stmt* RBRACE
+               {mixin="com.intellij.torquescript.psi.impl.SimpleNamedElementImpl"
+               implements="com.intellij.torquescript.psi.SimpleNamedElement" methods=[getKey getName setName getNameIdentifier]}
+
+var_list ::= VAR (COMMA VAR)*
+
+// Statements ----------------------------------------------------------------------------------------------------------
+stmt_block ::= LBRACE statement_list RBRACE
+             | stmt
+private  statement_list ::= stmt+
+
+stmt ::= if_stmt
+       | while_stmt
+       | for_stmt
+       | foreach_stmt
+       | switch_stmt
+       | datablock_decl
+       | BREAK SEMICOLON
+       | CONTINUE SEMICOLON
+       | RETURN SEMICOLON
+       | RETURN expr SEMICOLON
+       | expression_stmt SEMICOLON
+       //| TTAG ASSIGN expr SEMICOLON
+       //| TTAG ASSIGN expr COMMA expr SEMICOLON
+       | COMMENT
+
+// Logical statements
+
+if_stmt ::= IF LPAREN expr RPAREN stmt_block ELSE stmt_block
+          | IF LPAREN expr RPAREN stmt_block
+
+while_stmt ::= WHILE LPAREN expr RPAREN stmt_block
+             | DO stmt_block WHILE LPAREN expr RPAREN
+
+for_stmt ::= FOR LPAREN expr SEMICOLON expr SEMICOLON expr RPAREN stmt_block
+           | FOR LPAREN expr SEMICOLON expr SEMICOLON      RPAREN stmt_block
+           | FOR LPAREN expr SEMICOLON      SEMICOLON expr RPAREN stmt_block
+           | FOR LPAREN expr SEMICOLON      SEMICOLON      RPAREN stmt_block
+           | FOR LPAREN      SEMICOLON expr SEMICOLON expr RPAREN stmt_block
+           | FOR LPAREN      SEMICOLON expr SEMICOLON      RPAREN stmt_block
+           | FOR LPAREN      SEMICOLON      SEMICOLON expr RPAREN stmt_block
+           | FOR LPAREN      SEMICOLON      SEMICOLON      RPAREN stmt_block
+
+foreach_stmt ::= FOREACH LPAREN VAR IN expr RPAREN stmt_block
+            | FOREACHSTR LPAREN VAR IN expr RPAREN stmt_block
+
+switch_stmt ::= SWITCH LPAREN expr RPAREN LBRACE case_block RBRACE
+              | SWITCHSTR LPAREN expr RPAREN LBRACE case_block RBRACE
+
+case_block ::= CASE case_expr COLON statement_list
+             | CASE case_expr COLON statement_list DEFAULT COLON statement_list
+             | CASE case_expr COLON statement_list case_block
+
+case_expr ::= expr (CASEOR case_expr)*
+
+// Datablock
+
+datablock_decl ::= DATABLOCK class_name_expr LPAREN expr parent_block RPAREN LBRACE slot_assign_list_opt RBRACE SEMICOLON
+                |  SINGLETON class_name_expr LPAREN expr parent_block RPAREN LBRACE slot_assign_list_opt RBRACE SEMICOLON
+
+// Expressions ---------------------------------------------------------------------------------------------------------
+expression_stmt ::= expr {pin=1 recoverWhile=expression_recover}
+private expression_recover ::= !(SEMICOLON)
+
+expr ::= assert_group
+       | assignment_group
+       | binop_group
+       | unary_group
+       | internal_group
+       | funcall_group
+       | lvalue_group
+       | literal_group
+       | obj_group
+       | primary_group
+
+// Primary expressions -- Begin
+private primary_group ::= inlineif_expr | inlineelse_expr
+
+inlineif_expr ::= expr QUESTION expr
+inlineelse_expr ::= inlineif_expr COLON expr
+// Primary expressions -- End
+
+// Object declarations -- Begin
+
+private obj_group ::= obj_1_expr | obj_2_expr | obj_3_expr | obj_4_expr | obj_5_expr
+
+obj_1_expr ::= NEW class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
+obj_2_expr ::= NEW class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN
+obj_3_expr ::= NEW class_name_expr LPAREN LBRACK object_name_expr RBRACK parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
+obj_4_expr ::= SINGLETON class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN LBRACE object_declare_block_expr RBRACE
+obj_5_expr ::= SINGLETON class_name_expr LPAREN object_name_expr parent_block_expr object_args_expr RPAREN
+
+parent_block_expr ::= (COLON ID)?
+
+object_name_expr ::= expr?
+
+object_args_expr ::= (COMMA expr)?
+
+object_declare_block_expr ::= slot_assign_list_expr
+                      | object_decl_list_expr
+                      | slot_assign_list_expr object_decl_list_expr
+                      |
+
+object_decl_list_expr ::= obj_group SEMICOLON
+                   | obj_group object_decl_list_expr
+
+slot_assign_list_expr ::= slot_assign+
+
+// Variable slots for constructors
+slot_assign ::= ID ASSIGN expr SEMICOLON
+              //| TYPEID ID ASSIGN expr SEMICOLON TODO What is this, can it be implemented?
+              | DATABLOCK ASSIGN expr SEMICOLON
+              | ID LBRACK aidx_expr RBRACK ASSIGN expr SEMICOLON
+              //| TYPEID ID LBRACK aidx_expr RBRACK ASSIGN expr SEMICOLON TODO here as well
+
+// Object declarations -- End
+
+// Binary operators -- Begin
+private binop_group ::= gt_expr
+                      | ge_expr
+                      | lt_expr
+                      | le_expr
+                      | eq_expr
+                      | neq_expr
+                      | streq_expr
+                      | strneq_expr
+                      | logor_expr
+                      | logand_expr
+                      | lshft_expr
+                      | rshft_expr
+                      | cat_expr
+                      | xor_expr
+                      | mod_expr
+                      | and_expr
+                      | or_expr
+                      | plus_expr
+                      | minus_expr
+                      | times_expr
+                      | divide_expr
+
+gt_expr ::= expr GT expr
+ge_expr ::= expr GE expr
+lt_expr ::= expr LT expr
+le_expr ::= expr LE expr
+eq_expr ::= expr EQUAL expr
+neq_expr ::= expr NOTEQUAL expr
+streq_expr ::= expr STREQUAL expr
+strneq_expr ::= expr NOTSTREQUAL expr
+logor_expr ::= expr LOGOR expr
+logand_expr ::= expr LOGAND expr
+lshft_expr ::= expr BITLSHIFT expr
+rshft_expr ::= expr BITRSHIFT expr
+cat_expr ::= expr CONCAT expr
+xor_expr ::= expr BITXOR expr
+mod_expr ::= expr MODULO expr
+and_expr ::= expr BITAND expr
+or_expr ::= expr BITOR expr
+plus_expr ::= expr PLUS expr
+minus_expr ::= expr MINUS expr
+times_expr ::= expr TIMES expr
+divide_expr ::= expr DIVIDE expr
+// Binary operators -- End
+
+// Unary operators -- Begin
+private unary_group ::= unary_compl_expr
+                      | unary_minus_expr
+                      | unary_neg_expr
+                      | unary_times_expr
+                      | unary_increment_expr
+                      | unary_decrement_expr
+
+unary_minus_expr ::= MINUS expr
+unary_times_expr ::= TIMES expr
+unary_neg_expr ::= EXCLAMATION expr
+unary_compl_expr ::= BITCOMPL expr
+unary_increment_expr ::= expr PLUSPLUS
+unary_decrement_expr ::= expr MINUSMINUS
+// Unary operators -- End
+
+// Literals -- Begin
+private literal_group ::= tag_expr
+                        | float_expr
+                        | int_expr
+                        | break_expr
+                        | id_expr
+                        | str_expr
+                        //| var_expr
+
+tag_expr ::= TAG
+float_expr ::= FLOAT
+int_expr ::= INTEGER
+break_expr ::= BREAK
+id_expr ::= ID
+str_expr ::= STRING
+var_expr ::= VAR
+// Literals -- End
+
+// Assert -- Begin
+private assert_group ::= assert_1_expr
+                       //| assert_2_expr
+
+assert_1_expr ::= ASSERT LPAREN expr [COMMA STRING] RPAREN
+//assert_2_expr ::= ASSERT LPAREN expr COMMA STRING RPAREN // TODO look into this or remove it
+// Assert -- End
+
+// Assignments -- Begin
+private assignment_group ::= var_assignment_1_expr
+                           | var_assignment_2_expr
+
+var_assignment_1_expr ::= slot_acc_expr assign_op_atom expr
+var_assignment_2_expr ::= var_expr assign_op_atom expr
+
+// Assignments -- End
+
+// Internalname -- Begin
+private internal_group ::= intslot_expr
+                         | intslotrec_expr
+intslot_expr ::= expr INTERNALNAME class_name_expr
+intslotrec_expr ::= expr INTERNALNAMERECUR class_name_expr
+// Internalname -- End
+
+// Left values -- Begin
+private lvalue_group ::= slotid_expr | slotbrack_expr | var_expr
+
+slotid_expr ::= expr DOT ID {elementType=slot_acc_expr}
+slotbrack_expr ::= expr (LBRACK aidx_expr RBRACK) {elementType=slot_acc_expr}
+
+slot_acc_expr ::=
+// Left values -- End
+
+// Function calls -- Begin
+private funcall_group ::= funcall_1_expr | funcall_2_expr | funcall_3_expr
+
+funcall_1_expr ::= expr DOT ID (LPAREN expr_list? RPAREN)
+funcall_2_expr ::= ID LPAREN expr_list? RPAREN
+funcall_3_expr ::= ID COLONCOLON ID LPAREN expr_list? RPAREN
+// Function calls -- End
+
+// Utility -- Begin
+class_name_expr ::= id_expr | LPAREN expr RPAREN
+
+assign_op_atom ::= ASSIGN
+                 | PLUSASSIGN
+                 | MINUSASSIGN
+                 | TIMESASSIGN
+                 | DIVIDEASSIGN
+                 | MODULOASSIGN
+                 | ANDASSIGN
+                 | XORASSIGN
+                 | ORASSIGN
+                 | SHIFTLASSIGN
+                 | SHIFTRASSIGN
+
+aidx_expr ::= expr (COMMA aidx_expr)?
+
+expr_list ::= expr (COMMA expr)*
+// Utility -- End

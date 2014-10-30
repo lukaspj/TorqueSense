@@ -121,7 +121,9 @@ numberliteral_expr ::= INTEGER | FLOAT
 
 stringliteral_expr ::= STRING | TAG
 
-var_list ::= (LOCALVAR (COMMA LOCALVAR)*)?
+var_list ::= args?
+args ::= LOCALVAR
+      | LOCALVAR COMMA args
 
 while_stmt ::= WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
 for_stmt ::= FOR LPAREN expr SEMICOLON expr SEMICOLON expr RPAREN LBRACE stmt_list RBRACE

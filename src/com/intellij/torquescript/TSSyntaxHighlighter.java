@@ -74,9 +74,9 @@ public class TSSyntaxHighlighter extends SyntaxHighlighterBase {
                 || iElementType.equals(TSTypes.DEFAULT)
                 || iElementType.equals(TSTypes.RETURN)
                 || iElementType.equals(TSTypes.DATABLOCK)
-                || iElementType.equals(TSTypes.SINGLETON)
+                /*|| iElementType.equals(TSTypes.SINGLETON)*/
                 || iElementType.equals(TSTypes.IN)
-                || iElementType.equals(TSTypes.NEW)) {
+                /*|| iElementType.equals(TSTypes.NEW)*/) {
             return KEYWORD_KEYS;
         } else if (iElementType.equals(TSTypes.LPAREN) || iElementType.equals(TSTypes.RPAREN)) {
             return PARENTHESES_KEYS;
