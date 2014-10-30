@@ -31,6 +31,10 @@
 
     <!-- Settings pages -->
       <colorSettingsPage implementation="com.intellij.torquescript.TSColorSettingsPage"/>
+
+    <!-- Schemes -->
+      <additionalTextAttributes scheme="Default" file="colorSchemes/TorqueScriptDefault.xml"/>
+      <additionalTextAttributes scheme="Darcula" file="colorSchemes/TorqueScriptDarcula.xml"/>
   </extensions>
 
   <application-components>
