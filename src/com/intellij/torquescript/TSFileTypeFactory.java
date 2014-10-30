@@ -11,5 +11,6 @@ public class TSFileTypeFactory extends FileTypeFactory {
     @Override
     public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
         fileTypeConsumer.consume(TSFileType.INSTANCE, "t3d");
+        fileTypeConsumer.consume(TSFileType2.INSTANCE, "cs");
     }
 }
