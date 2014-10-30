@@ -42,8 +42,8 @@ TAG="\'".*"\'"
 
 <YYINITIAL> {
     {END_OF_LINE_COMMENT}                           { yybegin(YYINITIAL); return TSTypes.COMMENT; }
-    {LOCALVAR}                                      { return TSTypes.VAR; }//TSTypes.LOCALVAR; }
-    {GLOBALVAR}                                     { return TSTypes.VAR; }//TSTypes.GLOBALVAR; }
+    {LOCALVAR}                                      { return TSTypes.LOCALVAR; }
+    {GLOBALVAR}                                     { return TSTypes.GLOBALVAR; }
     "function"                                      { return TSTypes.FUNCTION; }
     "datablock"                                     { return TSTypes.DATABLOCK; }
     "singleton"                                     { return TSTypes.SINGLETON; }

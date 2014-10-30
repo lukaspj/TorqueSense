@@ -47,11 +47,11 @@ public class TSSyntaxHighlighter extends SyntaxHighlighterBase {
     @NotNull
     @Override
     public TextAttributesKey[] getTokenHighlights(IElementType iElementType) {
-        if(iElementType.equals(TSTypes.VAR)) {
+        if(iElementType.equals(TSTypes.LOCALVAR)) {
             return LOCALVARIABLE_KEYS;
-        } /*else if (iElementType.equals(TSTypes.GLOBALVAR)) {
+        } else if (iElementType.equals(TSTypes.GLOBALVAR)) {
             return GLOBALVARIABLE_KEYS;
-        } */else if (iElementType.equals(TSTypes.COMMENT)) {
+        } else if (iElementType.equals(TSTypes.COMMENT)) {
             return COMMENT_KEYS;
         } else if (iElementType.equals(TSTypes.FUNCTION) || iElementType.equals(TSTypes.TAG)) {
             return FUNCTION_KEYS;
@@ -74,9 +74,9 @@ public class TSSyntaxHighlighter extends SyntaxHighlighterBase {
                 || iElementType.equals(TSTypes.DEFAULT)
                 || iElementType.equals(TSTypes.RETURN)
                 || iElementType.equals(TSTypes.DATABLOCK)
-                /*|| iElementType.equals(TSTypes.SINGLETON)*/
+                || iElementType.equals(TSTypes.SINGLETON)
                 || iElementType.equals(TSTypes.IN)
-                /*|| iElementType.equals(TSTypes.NEW)*/) {
+                || iElementType.equals(TSTypes.NEW)) {
             return KEYWORD_KEYS;
         } else if (iElementType.equals(TSTypes.LPAREN) || iElementType.equals(TSTypes.RPAREN)) {
             return PARENTHESES_KEYS;

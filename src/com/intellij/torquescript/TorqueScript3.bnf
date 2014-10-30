@@ -26,12 +26,12 @@ decl ::= stmt
 package_decl_stmt ::= PACKAGE ID LBRACE fn_decl_stmt+ RBRACE SEMICOLON
 
 // Function specific
-fn_decl_stmt ::= FUNCTION ID LPAREN var_list? RPAREN LBRACE stmt* RBRACE
-               | FUNCTION ID COLONCOLON ID LPAREN var_list? RPAREN LBRACE stmt* RBRACE
+fn_decl_stmt ::= FUNCTION ID LPAREN arg_list? RPAREN LBRACE stmt* RBRACE
+               | FUNCTION ID COLONCOLON ID LPAREN arg_list? RPAREN LBRACE stmt* RBRACE
                {mixin="com.intellij.torquescript.psi.impl.SimpleNamedElementImpl"
                implements="com.intellij.torquescript.psi.SimpleNamedElement" methods=[getKey getName setName getNameIdentifier]}
 
-var_list ::= VAR (COMMA VAR)*
+arg_list ::= LOCALVAR (COMMA LOCALVAR)*
 
 // Statements ----------------------------------------------------------------------------------------------------------
 stmt_block ::= LBRACE statement_list RBRACE
@@ -61,17 +61,10 @@ if_stmt ::= IF LPAREN expr RPAREN stmt_block ELSE stmt_block
 while_stmt ::= WHILE LPAREN expr RPAREN stmt_block
              | DO stmt_block WHILE LPAREN expr RPAREN
 
-for_stmt ::= FOR LPAREN expr SEMICOLON expr SEMICOLON expr RPAREN stmt_block
-           | FOR LPAREN expr SEMICOLON expr SEMICOLON      RPAREN stmt_block
-           | FOR LPAREN expr SEMICOLON      SEMICOLON expr RPAREN stmt_block
-           | FOR LPAREN expr SEMICOLON      SEMICOLON      RPAREN stmt_block
-           | FOR LPAREN      SEMICOLON expr SEMICOLON expr RPAREN stmt_block
-           | FOR LPAREN      SEMICOLON expr SEMICOLON      RPAREN stmt_block
-           | FOR LPAREN      SEMICOLON      SEMICOLON expr RPAREN stmt_block
-           | FOR LPAREN      SEMICOLON      SEMICOLON      RPAREN stmt_block
+for_stmt ::= FOR LPAREN expr? SEMICOLON expr? SEMICOLON expr? RPAREN stmt_block
 
-foreach_stmt ::= FOREACH LPAREN VAR IN expr RPAREN stmt_block
-            | FOREACHSTR LPAREN VAR IN expr RPAREN stmt_block
+foreach_stmt ::= FOREACH LPAREN LOCALVAR IN expr RPAREN stmt_block
+            | FOREACHSTR LPAREN LOCALVAR IN expr RPAREN stmt_block
 
 switch_stmt ::= SWITCH LPAREN expr RPAREN LBRACE case_block RBRACE
               | SWITCHSTR LPAREN expr RPAREN LBRACE case_block RBRACE
@@ -220,7 +213,7 @@ int_expr ::= INTEGER
 break_expr ::= BREAK
 id_expr ::= ID
 str_expr ::= STRING
-var_expr ::= VAR
+var_expr ::= LOCALVAR | GLOBALVAR
 // Literals -- End
 
 // Assert -- Begin
